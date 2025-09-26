@@ -50,7 +50,7 @@ def load_data():
     if getattr(sys, 'frozen', False):
         base_dir = sys._MEIPASS
     else:
-        base_dir = os.getcwd() 
+        base_dir = os.path.dirname(os.path.abspath(__file__))
     
     data_dict = {}
     features = get_input_variables()
@@ -110,4 +110,5 @@ def get_smiles_mappings():
         'R3': {
             'h': '[H]', 'tert-butyl': 'C(C)(C)C', 'methyl': 'C', 'i': '[I]', 'cl': '[Cl]', 'br': '[Br]', 'phenyl': 'c1ccccc1', 'cumyl': 'CC(C)(c1ccccc1)c1ccccc1', 'methoxy': 'CO'
         }
+
     }

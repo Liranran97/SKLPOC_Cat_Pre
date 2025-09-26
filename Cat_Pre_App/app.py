@@ -275,6 +275,8 @@ def main_forward_prediction(models, scalers_X, scalers_y, metrics):
             st.metric(label=f"MWD ({unit_map['MWD']})", value=f"{results['MWD']:.2f}", delta=f"±{uncertainties['MWD']:.2f}")
 
 
+# app.py (已修改 main_inverse_search 函数)
+
 def main_inverse_search(models, scalers_X, scalers_y):
     """
     逆向寻找相似条件页面，通过模型预测生成虚拟数据集进行搜索。
@@ -299,9 +301,8 @@ def main_inverse_search(models, scalers_X, scalers_y):
         st.info("正在利用模型生成虚拟实验条件数据集，这可能需要一些时间...")
         
         cat_mappings = get_categorical_mappings()
-        # smiles_mappings = get_smiles_mappings() # 未使用，可删除
 
-        # 组合所有可能的离散变量
+        # 组合所有可能的离散变量 (M, R1, R2, R3)
         discrete_vars_combos = list(itertools.product(
             list(cat_mappings['M'].keys()),
             list(cat_mappings['R1'].keys()),
@@ -309,13 +310,24 @@ def main_inverse_search(models, scalers_X, scalers_y):
             list(cat_mappings['R3'].keys())
         ))
 
-        # 🌟 关键修正：创建更精细的数值变量网格，增加结果多样性
-        temp_grid = np.linspace(25, 250, 5)  # 从 10 增加到 20
-        press_grid = np.linspace(0.1, 1.0, 3) # 从 5 增加到 10
-        al_m_grid = np.linspace(25, 12500, 5) # 从 10 增加到 20
-        time_grid = np.linspace(1, 60, 3)    # 从 5 增加到 10
+        # 🌟 关键修正：纳入 Cat 和 Cocat 到数值变量网格 🌟
+        # 使用保守的网格点数以避免 Streamlit Cloud 崩溃
+        temp_grid = np.linspace(25, 250, 5)  # T: 5个点
+        press_grid = np.linspace(0.1, 1.0, 3) # P: 3个点
+        al_m_grid = np.linspace(25, 12500, 5) # Al/M: 5个点
+        time_grid = np.linspace(1, 60, 3)     # Time: 3个点
         
-        numerical_vars_combos = list(itertools.product(temp_grid, press_grid, al_m_grid, time_grid))
+        # --- 新增 Cat 和 Cocat 网格 ---
+        cat_grid = np.linspace(0.1, 5.0, 3)    # Cat: 3个点 (范围 0.1 到 5.0)
+        cocat_grid = np.linspace(0.1, 10.0, 3) # Cocat: 3个点 (范围 0.1 到 10.0)
+        
+        # 构建包含所有数值变量的笛卡尔积
+        numerical_vars_combos = list(itertools.product(
+            temp_grid, press_grid, al_m_grid, time_grid, cat_grid, cocat_grid
+        ))
+        
+        # 新的组合数: 10530 * (5*3*5*3*3*3) = 10530 * 675 ≈ 710 万行。
+        # 虽然行数变多，但 Streamlit Cloud 应该能处理。如果仍然崩溃，请降低网格点数。
 
         # 构建虚拟输入 DataFrame
         virtual_inputs = []
@@ -330,8 +342,8 @@ def main_inverse_search(models, scalers_X, scalers_y):
                     'P': numerical_combo[1],
                     'Al/M': numerical_combo[2],
                     'Time': numerical_combo[3],
-                    'Cat': 1.0, # 假设 Cat 和 Cocat 为常数
-                    'Cocat': 2.0
+                    'Cat': numerical_combo[4],   # 🌟 Cat 来自网格
+                    'Cocat': numerical_combo[5] # 🌟 Cocat 来自网格
                 }
                 virtual_inputs.append(row)
 
@@ -340,7 +352,6 @@ def main_inverse_search(models, scalers_X, scalers_y):
         # 步骤 2: 预测虚拟数据集的性能
         virtual_df_with_preds = virtual_df.copy()
         for target in get_output_variables():
-            # 这里的模型和标量需要从 load_models_and_data 函数传入
             scaler_X = scalers_X[target]
             model = models[target]
             
@@ -352,6 +363,7 @@ def main_inverse_search(models, scalers_X, scalers_y):
         st.success(f"已生成 {len(virtual_df_with_preds)} 个虚拟实验条件。")
         
         # 步骤 3: 寻找最接近目标值的条件（纯输出空间相似性搜索）
+        # ... (后续计算距离和展示结果的代码保持不变) ...
         
         combined_df_normalized = virtual_df_with_preds.copy()
         target_values = {}
@@ -362,18 +374,22 @@ def main_inverse_search(models, scalers_X, scalers_y):
             mean = virtual_df_with_preds[var].mean()
             std = virtual_df_with_preds[var].std()
             
-            # 🌟 关键：对标准差为0的情况进行处理，避免除以0
-            if std == 0 or np.isnan(std):
+            # 关键：对标准差为0的情况进行处理，避免除以0
+            if std == 0 or np.isnan(std) or std < 1e-6:
                 combined_df_normalized[var] = 0
                 target_values[var] = 0
             else:
                 combined_df_normalized[var] = (virtual_df_with_preds[var] - mean) / std
 
-        # 归一化目标值
-        target_values['CA'] = (target_ca - virtual_df_with_preds['CA'].mean()) / virtual_df_with_preds['CA'].std()
-        target_values['MW'] = (target_mw - virtual_df_with_preds['MW'].mean()) / virtual_df_with_preds['MW'].std()
-        target_values['MWD'] = (target_mwd - virtual_df_with_preds['MWD'].mean()) / virtual_df_with_preds['MWD'].std()
+        # 归一化目标值 (注意对 std == 0 的处理)
+        std_ca = virtual_df_with_preds['CA'].std()
+        std_mw = virtual_df_with_preds['MW'].std()
+        std_mwd = virtual_df_with_preds['MWD'].std()
         
+        target_values['CA'] = 0 if std_ca < 1e-6 else (target_ca - virtual_df_with_preds['CA'].mean()) / std_ca
+        target_values['MW'] = 0 if std_mw < 1e-6 else (target_mw - virtual_df_with_preds['MW'].mean()) / std_mw
+        target_values['MWD'] = 0 if std_mwd < 1e-6 else (target_mwd - virtual_df_with_preds['MWD'].mean()) / std_mwd
+
         # 4. 计算距离 (只针对归一化后的 CA, MW, MWD)
         normalized_data_matrix = combined_df_normalized[['CA', 'MW', 'MWD']].values
         target_vector = np.array([target_values['CA'], target_values['MW'], target_values['MWD']])
@@ -399,15 +415,16 @@ def main_inverse_search(models, scalers_X, scalers_y):
             for col in ['R1', 'R2', 'R3', 'M']:
                 if col in result_df.columns:
                     value = float(row[col])
-                    # 使用 .get 方法避免 KeyError
-                    ligand_name = inverse_map[col].get(value, f"未知配体({value})") 
+                    ligand_name = inverse_map[col].get(value, f"未知配体({value})")  
                     result_df[col] = ligand_name
             
-            # 格式化 T, P, Al/M, Time 等数值
+            # 格式化 T, P, Al/M, Time, Cat, Cocat 等数值
             result_df['T'] = result_df['T'].round(1)
             result_df['P'] = result_df['P'].round(2)
             result_df['Al/M'] = result_df['Al/M'].round(0).astype(int)
             result_df['Time'] = result_df['Time'].round(1)
+            result_df['Cat'] = result_df['Cat'].round(2)    # 新增格式化
+            result_df['Cocat'] = result_df['Cocat'].round(2) # 新增格式化
             
             st.dataframe(result_df)
             
@@ -526,6 +543,7 @@ def main():
 if __name__ == '__main__':
 
     main() 
+
 
 
 

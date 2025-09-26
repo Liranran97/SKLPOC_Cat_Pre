@@ -310,10 +310,10 @@ def main_inverse_search(models, scalers_X, scalers_y):
         ))
 
         # 🌟 关键修正：创建更精细的数值变量网格，增加结果多样性
-        temp_grid = np.linspace(25, 250, 10)  # 从 10 增加到 20
-        press_grid = np.linspace(0.1, 1.0, 5) # 从 5 增加到 10
-        al_m_grid = np.linspace(25, 12500, 10) # 从 10 增加到 20
-        time_grid = np.linspace(1, 60, 5)    # 从 5 增加到 10
+        temp_grid = np.linspace(25, 250, 5)  # 从 10 增加到 20
+        press_grid = np.linspace(0.1, 1.0, 3) # 从 5 增加到 10
+        al_m_grid = np.linspace(25, 12500, 5) # 从 10 增加到 20
+        time_grid = np.linspace(1, 60, 3)    # 从 5 增加到 10
         
         numerical_vars_combos = list(itertools.product(temp_grid, press_grid, al_m_grid, time_grid))
 
@@ -526,6 +526,7 @@ def main():
 if __name__ == '__main__':
 
     main() 
+
 
 
 

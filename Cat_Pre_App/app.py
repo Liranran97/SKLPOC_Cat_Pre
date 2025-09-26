@@ -16,8 +16,16 @@ import base64
 from io import BytesIO
 import itertools
 
-# 需要先安装 RDKit, scikit-learn, matplotlib, seaborn: pip install rdkit scikit-learn matplotlib seaborn
-
+# --- 🎯 路径修正：将当前工作目录切换到 app.py 所在的文件夹 ---
+# 这确保了 'Models/Trained' 这样的相对路径是正确的
+try:
+    # 获取 app.py 的绝对路径，并切换到它所在的目录
+    # 注意：在 Streamlit Cloud 中，os.path.abspath(__file__) 是获取当前文件的绝对路径的可靠方法。
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    # st.write(f"当前工作目录已切换至: {os.getcwd()}") # 临时诊断，可去除
+except Exception as e:
+    # 捕获可能的权限或路径错误
+    print(f"无法切换工作目录: {e}") 
 # 加载模型、标准化器和数据
 @st.cache_resource
 def load_models_and_data():
@@ -30,11 +38,7 @@ def load_models_and_data():
     scalers_y = {}
     metrics = {}
     
-    # 检查 PyInstaller 打包后的文件路径
-    if getattr(sys, 'frozen', False):
-        model_dir = os.path.join(sys._MEIPASS, 'Models/Trained')
-    else:
-        model_dir = 'Models/Trained'
+    model_dir = 'Models/Trained'
 
     if not os.path.exists(model_dir):
         st.error("找不到训练好的模型。请先运行 main.py。")
@@ -514,4 +518,5 @@ def main():
 
 # 最终修复后的主入口点
 if __name__ == '__main__':
+
     main() 

@@ -18,14 +18,19 @@ import itertools
 
 # --- 🎯 路径修正：将当前工作目录切换到 app.py 所在的文件夹 ---
 # 这确保了 'Models/Trained' 这样的相对路径是正确的
+# --- 🎯 路径修正：将当前工作目录切换到 app.py 所在的文件夹 ---
 try:
-    # 获取 app.py 的绝对路径，并切换到它所在的目录
-    # 注意：在 Streamlit Cloud 中，os.path.abspath(__file__) 是获取当前文件的绝对路径的可靠方法。
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # st.write(f"当前工作目录已切换至: {os.getcwd()}") # 临时诊断，可去除
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(current_dir)
+    
+    # 🚨 新增诊断代码
+    import logging
+    logging.warning(f"当前工作目录已切换至: {os.getcwd()}")
+    st.write(f"当前工作目录已切换至: {os.getcwd()}") 
+    
 except Exception as e:
-    # 捕获可能的权限或路径错误
-    print(f"无法切换工作目录: {e}") 
+    print(f"无法切换工作目录: {e}") 
+
 # 加载模型、标准化器和数据
 @st.cache_resource
 def load_models_and_data():
@@ -520,3 +525,4 @@ def main():
 if __name__ == '__main__':
 
     main() 
+

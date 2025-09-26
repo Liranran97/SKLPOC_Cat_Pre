@@ -20,7 +20,7 @@ import itertools
 # 这确保了 'Models/Trained' 这样的相对路径是正确的
 # --- 🎯 路径修正：将当前工作目录切换到 app.py 所在的文件夹 ---
 try:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    current_dir = os.path.abspath(__file__)
     os.chdir(current_dir)
     import logging
     logging.warning(f"当前工作目录已切换至: {os.getcwd()}")
@@ -521,6 +521,7 @@ def main():
 if __name__ == '__main__':
 
     main() 
+
 
 
 

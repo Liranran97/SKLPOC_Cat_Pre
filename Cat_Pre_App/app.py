@@ -22,7 +22,6 @@ import itertools
 try:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(current_dir)
-    # 🚨 新增诊断代码
     import logging
     logging.warning(f"当前工作目录已切换至: {os.getcwd()}")
     st.write(f"当前工作目录已切换至: {os.getcwd()}") 
@@ -523,5 +522,6 @@ def main():
 if __name__ == '__main__':
 
     main() 
+
 
 

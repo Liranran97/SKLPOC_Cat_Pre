@@ -2,17 +2,13 @@ name: polyolefin_env
 channels:
   - conda-forge
 dependencies:
-  - python=3.13.5
-  # 使用 conda-forge 安装 RDKit，这是最可靠的方式
+  - python=3.10
+  # 仅通过 conda 安装 RDKit
   - rdkit
   
-  # 其他需要通过 conda 安装的库（可选，如果 pip 失败）
-  # - numpy
-  # - pandas
-
+  # 其余库通过 pip 安装
   - pip
   - pip:
-    # 将其余所有库放回 pip 列表
     - streamlit
     - pandas
     - numpy

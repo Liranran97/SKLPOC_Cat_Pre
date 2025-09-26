@@ -26,7 +26,7 @@ try:
     logging.warning(f"当前工作目录已切换至: {os.getcwd()}")
     st.write(f"当前工作目录已切换至: {os.getcwd()}") 
 except Exception as e:
-    print(f"无法切换工作目录{e}") 
+    print(f"{e}") 
 
 # 加载模型、标准化器和数据
 @st.cache_resource
@@ -522,6 +522,7 @@ def main():
 if __name__ == '__main__':
 
     main() 
+
 
 
 

@@ -19,14 +19,14 @@ import itertools
 # --- 🎯 路径修正：将当前工作目录切换到 app.py 所在的文件夹 ---
 # 这确保了 'Models/Trained' 这样的相对路径是正确的
 # --- 🎯 路径修正：将当前工作目录切换到 app.py 所在的文件夹 ---
-try:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(current_dir)
-    import logging
-    logging.warning(f"当前工作目录已切换至: {os.getcwd()}")
-except Exception as e:
-    st.error(f"无法切换工作目录: {e}")
-    st.stop()
+#try:
+#    current_dir = os.path.dirname(os.path.abspath(__file__))
+#    os.chdir(current_dir)
+#    import logging
+#    logging.warning(f"当前工作目录已切换至: {os.getcwd()}")
+#except Exception as e:
+#    st.error(f"无法切换工作目录: {e}")
+#    st.stop()
 # 加载模型、标准化器和数据
 @st.cache_resource
 def load_models_and_data():
@@ -521,6 +521,7 @@ def main():
 if __name__ == '__main__':
 
     main() 
+
 
 
 

@@ -1,0 +1,4 @@
+# RDKit usually requires conda to install correctly in this environment.
+# We will use the environment.yml file for RDKit and keep this file empty or for other linux dependencies if needed.
+# For RDKit, we primarily rely on the environment.yml file in the next step.
+# You can leave this file empty if no other Linux system packages are needed.

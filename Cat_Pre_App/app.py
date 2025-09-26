@@ -39,10 +39,15 @@ def load_models_and_data():
     scalers_y = {}
     metrics = {}
     
-    model_dir = 'Models/Trained'
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    model_dir = os.path.join(current_script_dir, 'Models', 'Trained')
+
+    # 之前 os.chdir() 的代码已经被注释，不需要了。
+    # --------------------------------
 
     if not os.path.exists(model_dir):
-        st.error("找不到训练好的模型。请先运行 main.py。")
+        # 注意：现在这个错误信息更准确了，它会指向 Streamlit Cloud 上的路径
+        st.error(f"找不到训练好的模型。请先运行 main.py。预期的路径: {model_dir}")
         st.stop()
         
     data_dict = load_data() # data_dict 中的 R1, R2, R3, M 已经是数值
@@ -521,6 +526,7 @@ def main():
 if __name__ == '__main__':
 
     main() 
+
 
 
 
